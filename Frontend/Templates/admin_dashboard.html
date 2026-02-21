@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>👨‍💼 Admin Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item active">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Logged in as:<br><strong>{{ session.user_name }}</strong></p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1>Admin Dashboard</h1>
+                <p>System management and result publication control</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>{{ total_students }}</h3>
+                    <p>Total Students</p>
+                </div>
+                <div class="stat-card stat-success">
+                    <h3>{{ total_faculty }}</h3>
+                    <p>Total Faculty</p>
+                </div>
+                <div class="stat-card stat-warning">
+                    <h3>{{ pending_complaints }}</h3>
+                    <p>Pending Complaints</p>
+                </div>
+                <div class="stat-card stat-danger">
+                    <h3>{{ total_complaints }}</h3>
+                    <p>Total Complaints</p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="section-header">
+                    <h2>Result Publication Control</h2>
+                </div>
+
+                {% if exam_stats %}
+                    <div class="exam-list">
+                        {% for exam in exam_stats %}
+                        <div class="exam-card">
+                            <div class="exam-header">
+                                <div>
+                                    <h3>{{ exam.exam }}</h3>
+                                    <p class="exam-meta">
+                                        Max Marks: {{ exam.max_marks }} | 
+                                        Marks Uploaded: {{ exam.marks_count }} / {{ exam.expected_count }}
+                                        ({{ exam.completion_percentage }}%)
+                                    </p>
+                                </div>
+                                <div>
+                                    {% if exam.is_declared %}
+                                        <span class="badge badge-success">✓ Published</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">⏳ Not Published</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="exam-body">
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: {{ exam.completion_percentage }}%">
+                                        {{ exam.completion_percentage }}%
+                                    </div>
+                                </div>
+
+                                {% if not exam.can_publish and not exam.is_declared %}
+                                <div class="warning-box">
+                                    <strong>⚠️ Warning:</strong> Cannot publish results yet. 
+                                    Not all marks have been uploaded.
+                                </div>
+                                {% endif %}
+
+                                {% if exam.can_publish and not exam.is_declared %}
+                                <div class="success-box">
+                                    <strong>✓ Ready:</strong> All marks uploaded. 
+                                    You can now publish results for this exam.
+                                </div>
+                                {% endif %}
+
+                                {% if exam.is_declared %}
+                                <div class="info-box">
+                                    <strong>ℹ️ Published:</strong> Results are visible to students.
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="exam-actions">
+                                {% if exam.can_publish and not exam.is_declared %}
+                                <form method="POST" action="{{ url_for('publish_results', exam=exam.exam) }}" 
+                                      onsubmit="return confirm('Are you sure you want to publish results for {{ exam.exam }}? Students will be able to view their marks.');">
+                                    <button type="submit" class="btn btn-primary">
+                                        📢 Publish Results
+                                    </button>
+                                </form>
+                                {% elif exam.is_declared %}
+                                <form method="POST" action="{{ url_for('unpublish_results', exam=exam.exam) }}"
+                                      onsubmit="return confirm('Are you sure you want to unpublish results for {{ exam.exam }}? Students will no longer see their marks.');">
+                                    <button type="submit" class="btn btn-secondary">
+                                        🔒 Unpublish Results
+                                    </button>
+                                </form>
+                                {% else %}
+                                <button class="btn btn-secondary" disabled>
+                                    ⏳ Waiting for All Marks
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>📝 No exams found</p>
+                        <p>Marks will appear here once faculty uploads them</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="content-section">
+                <h2>System Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <strong>System Status:</strong>
+                        <span class="badge badge-success">✓ Operational</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Database:</strong>
+                        <span>SQLite3</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Version:</strong>
+                        <span>2.2</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
