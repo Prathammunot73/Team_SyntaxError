@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Grievance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎓 AI-Based Smart Grievance & Rechecking System</h1>
+            <p>Academic Excellence Through Fair Evaluation</p>
+        </header>
+
+        <div class="hero-section">
+            <div class="hero-content">
+                <h2>Welcome to the Academic Grievance Portal</h2>
+                <p>Submit and track your exam rechecking requests with AI-powered analysis</p>
+            </div>
+
+            <div class="login-options">
+                <div class="login-card">
+                    <div class="icon">👨‍🎓</div>
+                    <h3>Student Portal</h3>
+                    <p>Submit complaints and track status</p>
+                    <a href="{{ url_for('student_login') }}" class="btn btn-primary">Student Login</a>
+                    <a href="{{ url_for('student_register') }}" class="btn btn-secondary">Register</a>
+                </div>
+
+                <div class="login-card">
+                    <div class="icon">👨‍🏫</div>
+                    <h3>Faculty Portal</h3>
+                    <p>Review and process complaints</p>
+                    <a href="{{ url_for('faculty_login') }}" class="btn btn-primary">Faculty Login</a>
+                    <a href="{{ url_for('faculty_register') }}" class="btn btn-secondary">Register</a>
+                </div>
+
+                <div class="login-card">
+                    <div class="icon">👨‍💼</div>
+                    <h3>Admin Portal</h3>
+                    <p>Manage system and publish results</p>
+                    <a href="{{ url_for('admin_login') }}" class="btn btn-primary">Admin Login</a>
+                    <a href="{{ url_for('admin_register') }}" class="btn btn-secondary">Register</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="features">
+            <h3>System Features</h3>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <span class="feature-icon">🤖</span>
+                    <h4>AI Analysis</h4>
+                    <p>Automatic complaint analysis and question detection</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📄</span>
+                    <h4>PDF Highlighting</h4>
+                    <p>Automatic highlighting of relevant sections</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">⚡</span>
+                    <h4>Fast Processing</h4>
+                    <p>Quick turnaround on complaint reviews</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔒</span>
+                    <h4>Secure System</h4>
+                    <p>Protected data and secure authentication</p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2024 Smart Grievance System. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
