@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Complaint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>👨‍🏫 Faculty Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('faculty_dashboard') }}" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('add_marks') }}" class="nav-item">
+                    <span>➕</span> Add Marks
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1>Review Complaint #{{ complaint.id }}</h1>
+                <a href="{{ url_for('faculty_dashboard') }}" class="back-link">← Back to Dashboard</a>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="content-section">
+                <div class="review-grid">
+                    <div class="review-info">
+                        <div class="info-card">
+                            <h3>Student Information</h3>
+                            <p><strong>Name:</strong> {{ complaint.student_name }}</p>
+                            <p><strong>Email:</strong> {{ complaint.student_email }}</p>
+                            <p><strong>Subject:</strong> {{ complaint.subject }}</p>
+                            <p><strong>Exam:</strong> {{ complaint.exam }}</p>
+                            <p><strong>Submitted:</strong> {{ complaint.created_at }}</p>
+                        </div>
+
+                        <div class="info-card ai-analysis">
+                            <h3>🤖 AI Analysis</h3>
+                            <p><strong>Detected Question:</strong> 
+                                <span class="badge badge-info">{{ complaint.extracted_question }}</span>
+                            </p>
+                            <p><strong>Issue Type:</strong>
+                                <span class="badge 
+                                    {% if complaint.ai_issue_type == 'Marks Discrepancy' %}badge-marks-discrepancy
+                                    {% elif complaint.ai_issue_type == 'Calculation Error' %}badge-calculation-error
+                                    {% elif complaint.ai_issue_type == 'Unchecked Question' %}badge-unchecked
+                                    {% elif complaint.ai_issue_type == 'Evaluation Issue' %}badge-evaluation
+                                    {% else %}badge-info{% endif %}">
+                                    {{ complaint.ai_issue_type or 'General Complaint' }}
+                                </span>
+                            </p>
+                            {% if complaint.ai_confidence_score %}
+                            <p><strong>AI Confidence:</strong> 
+                                <span class="confidence-score">{{ (complaint.ai_confidence_score * 100)|round(1) }}%</span>
+                            </p>
+                            {% endif %}
+                            <p><strong>Summary:</strong></p>
+                            <p>{{ complaint.ai_summary }}</p>
+                        </div>
+
+                        {% if complaint.ai_detailed_explanation %}
+                        <div class="info-card ai-explanation-box">
+                            <h3>📋 Detailed Faculty Explanation</h3>
+                            <div class="explanation-content">
+                                {{ complaint.ai_detailed_explanation|replace('\n', '<br>')|safe }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="info-card">
+                            <h3>Student's Complaint</h3>
+                            <p>{{ complaint.complaint_text }}</p>
+                        </div>
+
+                        {% if complaint.highlighted_pdf_path %}
+                        <div class="info-card">
+                            <h3>📄 Answer Sheet</h3>
+                            <p>Highlighted PDF available for review</p>
+                            <p><small>Path: {{ complaint.highlighted_pdf_path }}</small></p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="review-form">
+                        <form method="POST">
+                            <h3>Faculty Decision</h3>
+                            
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status" required>
+                                    <option value="Pending Review" {{ 'selected' if complaint.status == 'Pending Review' else '' }}>
+                                        Pending Review
+                                    </option>
+                                    <option value="Approved" {{ 'selected' if complaint.status == 'Approved' else '' }}>
+                                        Approved
+                                    </option>
+                                    <option value="Rejected" {{ 'selected' if complaint.status == 'Rejected' else '' }}>
+                                        Rejected
+                                    </option>
+                                    <option value="Under Investigation" {{ 'selected' if complaint.status == 'Under Investigation' else '' }}>
+                                        Under Investigation
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="remark">Faculty Remark</label>
+                                <textarea id="remark" name="remark" rows="6" required 
+                                          placeholder="Provide detailed feedback on your decision...">{{ complaint.faculty_remark or '' }}</textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="{{ url_for('faculty_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Update Decision</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
