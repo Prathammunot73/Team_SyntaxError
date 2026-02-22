@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Timetable</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notices.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body data-user-type="student">
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Student Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('student_dashboard') }}" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('student_results') }}" class="nav-item">
+                    <span>📈</span> My Results
+                </a>
+                <a href="{{ url_for('student_timetable') }}" class="nav-item active">
+                    <span>📅</span> Timetable
+                </a>
+                <a href="{{ url_for('student_notices') }}" class="nav-item">
+                    <span>📢</span> Notice Board
+                </a>
+                <a href="{{ url_for('new_complaint') }}" class="nav-item">
+                    <span>➕</span> New Complaint
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Logged in as:<br><strong>{{ session.user_name }}</strong></p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1>📅 My Timetable</h1>
+                <p>View and download your class timetable</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if timetable %}
+                <div class="content-section">
+                    <div class="timetable-card">
+                        <div class="timetable-header">
+                            <div class="timetable-info">
+                                <h2>{{ timetable.title }}</h2>
+                                {% if timetable.description %}
+                                <p class="timetable-description">{{ timetable.description }}</p>
+                                {% endif %}
+                                <div class="timetable-meta">
+                                    <span>📅 Uploaded: {{ timetable.created_at[:10] }}</span>
+                                    <span>👤 By: {{ timetable.uploaded_by_name }}</span>
+                                    {% if timetable.department %}
+                                    <span>🏢 {{ timetable.department }}</span>
+                                    {% endif %}
+                                    {% if timetable.semester %}
+                                    <span>📚 Semester {{ timetable.semester }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="timetable-actions">
+                                <button class="btn btn-primary" onclick="viewTimetable()">
+                                    👁️ View Timetable
+                                </button>
+                                <a href="{{ url_for('download_notice', notice_id=timetable.id) }}" 
+                                   class="btn btn-secondary">
+                                    ⬇️ Download PDF
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="timetable-preview" id="timetablePreview">
+                            <iframe src="/{{ timetable.file_url }}" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Previous Timetables -->
+                {% if previous_timetables %}
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2>📚 Previous Timetables</h2>
+                    </div>
+                    <div class="previous-timetables">
+                        {% for prev in previous_timetables %}
+                        <div class="previous-timetable-item">
+                            <div class="prev-timetable-icon">📄</div>
+                            <div class="prev-timetable-info">
+                                <h4>{{ prev.title }}</h4>
+                                <span class="prev-timetable-date">{{ prev.created_at[:10] }}</span>
+                            </div>
+                            <div class="prev-timetable-actions">
+                                <a href="/{{ prev.file_url }}" target="_blank" class="btn btn-sm btn-secondary">
+                                    View
+                                </a>
+                                <a href="{{ url_for('download_notice', notice_id=prev.id) }}" class="btn btn-sm btn-secondary">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="content-section">
+                    <div class="empty-state">
+                        <span class="empty-icon">📅</span>
+                        <p>No timetable available yet</p>
+                        <p>Your timetable will appear here once uploaded by admin</p>
+                    </div>
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script>
+        function viewTimetable() {
+            const preview = document.getElementById('timetablePreview');
+            if (preview.style.display === 'none' || !preview.style.display) {
+                preview.style.display = 'block';
+                preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Auto-show timetable on page load
+        window.addEventListener('load', function() {
+            const preview = document.getElementById('timetablePreview');
+            if (preview) {
+                preview.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Marks - Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .total-marks-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 12px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .total-marks-value { font-size: 4em; font-weight: bold; margin: 20px 0; }
+        .total-marks-label { font-size: 1.2em; opacity: 0.9; }
+        .section { background: white; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.5em; font-weight: bold; margin-bottom: 20px; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .submission-item { border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: #f8f9fa; }
+        .submission-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+        .submission-title { font-size: 1.2em; font-weight: bold; color: #333; }
+        .bonus-badge { background: #28a745; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 1.1em; }
+        .meta-info { color: #666; font-size: 0.9em; margin: 5px 0; }
+        .log-item { border-left: 4px solid #007bff; padding: 15px; margin-bottom: 10px; background: white; border-radius: 5px; }
+        .log-action { font-weight: bold; color: #007bff; }
+        .log-time { color: #999; font-size: 0.85em; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .empty-state { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Internal Marks Breakdown</h1>
+                <p>Track your bonus marks from assignments</p>
+            </div>
+            <a href="{{ url_for('student_assignments') }}" class="btn">Back to Assignments</a>
+        </div>
+
+        <div class="total-marks-card">
+            <div class="total-marks-label">Total Internal Marks</div>
+            <div class="total-marks-value">{{ total_internal_marks or 0 }}</div>
+            <div class="total-marks-label">Earned from {{ submissions|length }} verified assignment{{ 's' if submissions|length != 1 else '' }}</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📊 Verified Submissions</div>
+            
+            {% if submissions %}
+                {% for sub in submissions %}
+                <div class="submission-item">
+                    <div class="submission-header">
+                        <div>
+                            <div class="submission-title">{{ sub['title'] }}</div>
+                            <div class="meta-info">{{ sub['subject'] }} • {{ sub['faculty_name'] }}</div>
+                        </div>
+                        <div class="bonus-badge">+{{ sub['teacher_final_bonus'] or 0 }} marks</div>
+                    </div>
+                    
+                    <div class="meta-info">
+                        <strong>Submitted:</strong> {{ sub['submission_time'][:16].replace('T', ' ') }}
+                    </div>
+                    <div class="meta-info">
+                        <strong>Verified:</strong> {{ sub['verified_at'][:16].replace('T', ' ') if sub['verified_at'] else 'N/A' }}
+                    </div>
+                    <div class="meta-info">
+                        <strong>AI Calculated Bonus:</strong> {{ sub['ai_bonus_marks'] }} marks
+                    </div>
+                    <div class="meta-info">
+                        <strong>Final Bonus Awarded:</strong> {{ sub['teacher_final_bonus'] or 0 }} marks
+                    </div>
+                    
+                    {% if sub['teacher_notes'] %}
+                    <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 5px; border-left: 3px solid #007bff;">
+                        <strong>Teacher's Note:</strong> {{ sub['teacher_notes'] }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No verified submissions yet</p>
+                    <p style="font-size: 0.9em; margin-top: 10px;">Submit assignments to start earning bonus marks!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <div class="section-title">📝 Marks Change Log</div>
+            
+            {% if marks_log %}
+                {% for log in marks_log %}
+                <div class="log-item">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <div class="log-action">{{ log['action'] }}</div>
+                            <div style="color: #666; margin: 5px 0;">
+                                <strong>Assignment:</strong> {{ log['assignment_title'] }}
+                            </div>
+                            {% if log['old_value'] != log['new_value'] %}
+                            <div style="color: #666;">
+                                <strong>Change:</strong> {{ log['old_value'] or 0 }} → {{ log['new_value'] or 0 }} marks
+                            </div>
+                            {% endif %}
+                            {% if log['notes'] %}
+                            <div style="margin-top: 5px; color: #555;">
+                                <strong>Note:</strong> {{ log['notes'] }}
+                            </div>
+                            {% endif %}
+                            <div class="log-time">
+                                By {{ log['changed_by_name'] }} on {{ log['changed_at'][:16].replace('T', ' ') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No activity log yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

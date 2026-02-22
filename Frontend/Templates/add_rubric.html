@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Rubric</title>
+</head>
+<body>
+
+<h2>Add Evaluation Rubric</h2>
+
+<form method="POST">
+
+    <label>Subject:</label><br>
+    <input type="text" name="subject" required><br><br>
+
+    <label>Exam:</label><br>
+    <input type="text" name="exam" required><br><br>
+
+    <label>Question ID:</label><br>
+    <input type="text" name="question_id" required><br><br>
+
+    <label>Component Name:</label><br>
+    <input type="text" name="component_name" required><br><br>
+
+    <label>Max Marks:</label><br>
+    <input type="number" name="max_marks" required><br><br>
+
+    <button type="submit">Add Rubric</button>
+
+</form>
+
+<br>
+<a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+
+</body>
+</html>

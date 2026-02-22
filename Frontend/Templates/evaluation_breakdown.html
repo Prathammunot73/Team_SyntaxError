@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evaluation Breakdown</title>
+</head>
+<body>
+
+<h2>Evaluation Breakdown</h2>
+
+<p><strong>Subject:</strong> {{ subject }}</p>
+<p><strong>Exam:</strong> {{ exam }}</p>
+<p><strong>Question:</strong> {{ question_id }}</p>
+
+<hr>
+
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Component</th>
+        <th>Marks Awarded</th>
+        <th>Max Marks</th>
+    </tr>
+
+    {% for row in breakdown %}
+    <tr>
+        <td>{{ row['component_name'] }}</td>
+        <td>{{ row['awarded_marks'] }}</td>
+        <td>{{ row['max_marks'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+
+<h3>Total: {{ total_awarded }} / {{ total_max }}</h3>
+
+<br>
+<a href="{{ url_for('student_results') }}">Back to Results</a>
+
+</body>
+</html>

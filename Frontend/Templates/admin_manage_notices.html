@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Notices</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notices.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Admin Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('admin_upload_notice') }}" class="nav-item">
+                    <span>📤</span> Upload Notice
+                </a>
+                <a href="{{ url_for('admin_manage_notices') }}" class="nav-item active">
+                    <span>📋</span> Manage Notices
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Logged in as:<br><strong>{{ session.user_name }}</strong></p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1>📋 Manage Notices</h1>
+                <p>View, edit, and delete uploaded notices</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="content-section">
+                <div class="section-header">
+                    <h2>All Notices ({{ notices|length }})</h2>
+                    <a href="{{ url_for('admin_upload_notice') }}" class="btn btn-primary">
+                        + Upload New Notice
+                    </a>
+                </div>
+
+                {% if notices %}
+                    <div class="table-container">
+                        <table class="data-table manage-notices-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Target</th>
+                                    <th>Uploaded</th>
+                                    <th>Downloads</th>
+                                    <th>Read Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notice in notices %}
+                                <tr class="notice-row">
+                                    <td>#{{ notice.id }}</td>
+                                    <td>
+                                        <strong>{{ notice.title }}</strong>
+                                        {% if notice.description %}
+                                        <br><small style="color: #64748b;">{{ notice.description[:50] }}...</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="notice-type-badge {{ notice.notice_type }}">
+                                            {{ notice.notice_type|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            {{ notice.target_role|title }}
+                                        </span>
+                                        {% if notice.department %}
+                                        <br><small>{{ notice.department }}</small>
+                                        {% endif %}
+                                        {% if notice.semester %}
+                                        <br><small>Sem {{ notice.semester }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ notice.created_at[:10] }}
+                                        <br><small>{{ notice.uploaded_by_name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-success">
+                                            {{ notice.download_count }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            {{ notice.read_count or 0 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <a href="/{{ notice.file_url }}" target="_blank" 
+                                               class="btn btn-sm btn-secondary" title="View PDF">
+                                                👁️
+                                            </a>
+                                            <form method="POST" 
+                                                  action="{{ url_for('admin_delete_notice', notice_id=notice.id) }}"
+                                                  style="display: inline;"
+                                                  onsubmit="return confirm('Are you sure you want to delete this notice?');">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                                    🗑️
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>📭 No notices uploaded yet</p>
+                        <a href="{{ url_for('admin_upload_notice') }}" class="btn btn-primary">
+                            Upload First Notice
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

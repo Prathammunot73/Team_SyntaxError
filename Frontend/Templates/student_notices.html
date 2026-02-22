@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice Board</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notices.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body data-user-type="student">
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Student Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('student_dashboard') }}" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('student_results') }}" class="nav-item">
+                    <span>📈</span> My Results
+                </a>
+                <a href="{{ url_for('student_timetable') }}" class="nav-item">
+                    <span>📅</span> Timetable
+                </a>
+                <a href="{{ url_for('student_notices') }}" class="nav-item active">
+                    <span>📢</span> Notice Board
+                    {% if unread_count > 0 %}
+                    <span class="nav-badge">{{ unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('new_complaint') }}" class="nav-item">
+                    <span>➕</span> New Complaint
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Logged in as:<br><strong>{{ session.user_name }}</strong></p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1>📢 Notice Board</h1>
+                <p>View all notices and announcements</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Filter Section -->
+            <div class="content-section">
+                <div class="notice-filters">
+                    <div class="filter-group">
+                        <label>Filter by Type:</label>
+                        <select id="typeFilter" onchange="filterNotices()">
+                            <option value="all">All Types</option>
+                            <option value="general">📢 General</option>
+                            <option value="exam">📝 Exam</option>
+                            <option value="event">🎉 Event</option>
+                            <option value="holiday">🏖️ Holiday</option>
+                            <option value="urgent">🚨 Urgent</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Show:</label>
+                        <select id="readFilter" onchange="filterNotices()">
+                            <option value="all">All Notices</option>
+                            <option value="unread">Unread Only</option>
+                            <option value="read">Read Only</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <input type="text" id="searchInput" placeholder="🔍 Search notices..." onkeyup="filterNotices()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notices List -->
+            <div class="content-section">
+                <div class="section-header">
+                    <h2>All Notices</h2>
+                    <span class="notice-count">{{ notices|length }} notices</span>
+                </div>
+
+                {% if notices %}
+                    <div class="notices-grid" id="noticesGrid">
+                        {% for notice in notices %}
+                        <div class="notice-card {{ 'unread' if not notice.is_read else 'read' }}" 
+                             data-type="{{ notice.notice_type }}" 
+                             data-read="{{ 'read' if notice.is_read else 'unread' }}"
+                             data-title="{{ notice.title|lower }}"
+                             data-description="{{ notice.description|lower if notice.description else '' }}">
+                            
+                            {% if not notice.is_read %}
+                            <span class="new-badge">NEW</span>
+                            {% endif %}
+                            
+                            <div class="notice-icon {{ notice.notice_type }}">
+                                {% if notice.notice_type == 'general' %}📢
+                                {% elif notice.notice_type == 'exam' %}📝
+                                {% elif notice.notice_type == 'event' %}🎉
+                                {% elif notice.notice_type == 'holiday' %}🏖️
+                                {% elif notice.notice_type == 'urgent' %}🚨
+                                {% else %}📄
+                                {% endif %}
+                            </div>
+                            
+                            <div class="notice-content">
+                                <h3>{{ notice.title }}</h3>
+                                {% if notice.description %}
+                                <p class="notice-description">{{ notice.description }}</p>
+                                {% endif %}
+                                
+                                <div class="notice-meta">
+                                    <span class="notice-date">
+                                        📅 {{ notice.created_at[:10] }}
+                                    </span>
+                                    <span class="notice-author">
+                                        👤 {{ notice.uploaded_by_name }}
+                                    </span>
+                                    {% if notice.target_role != 'all' %}
+                                    <span class="notice-target">
+                                        🎯 {{ notice.target_role|title }}
+                                        {% if notice.department %} - {{ notice.department }}{% endif %}
+                                        {% if notice.semester %} - Sem {{ notice.semester }}{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="notice-actions">
+                                <button class="btn btn-primary btn-sm" onclick="viewNotice({{ notice.id }}, '{{ notice.file_url }}', '{{ notice.title }}')">
+                                    👁️ View PDF
+                                </button>
+                                <a href="{{ url_for('download_notice', notice_id=notice.id) }}" 
+                                   class="btn btn-secondary btn-sm" 
+                                   onclick="markAsRead({{ notice.id }})">
+                                    ⬇️ Download
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>📭 No notices available</p>
+                        <p>Check back later for updates</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <!-- PDF Viewer Modal -->
+    <div id="pdfModal" class="pdf-modal" style="display: none;">
+        <div class="pdf-modal-content">
+            <div class="pdf-modal-header">
+                <h3 id="pdfTitle">Notice PDF</h3>
+                <button class="pdf-modal-close" onclick="closePdfModal()">×</button>
+            </div>
+            <div class="pdf-modal-body">
+                <iframe id="pdfViewer" src="" frameborder="0"></iframe>
+            </div>
+            <div class="pdf-modal-footer">
+                <button class="btn btn-secondary" onclick="closePdfModal()">Close</button>
+                <a id="pdfDownload" href="" class="btn btn-primary" download>
+                    ⬇️ Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script>
+        // View notice in modal
+        function viewNotice(noticeId, fileUrl, title) {
+            const modal = document.getElementById('pdfModal');
+            const viewer = document.getElementById('pdfViewer');
+            const titleEl = document.getElementById('pdfTitle');
+            const downloadLink = document.getElementById('pdfDownload');
+            
+            titleEl.textContent = title;
+            // Use the view-notice route instead of direct file path
+            viewer.src = `/view-notice/${noticeId}`;
+            downloadLink.href = `/download-notice/${noticeId}`;
+            modal.style.display = 'flex';
+            
+            // Mark as read
+            markAsRead(noticeId);
+        }
+
+        // Close PDF modal
+        function closePdfModal() {
+            const modal = document.getElementById('pdfModal');
+            const viewer = document.getElementById('pdfViewer');
+            modal.style.display = 'none';
+            viewer.src = '';
+        }
+
+        // Mark notice as read
+        function markAsRead(noticeId) {
+            fetch(`/api/notices/${noticeId}/read`, {
+                method: 'POST'
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      // Update UI
+                      const card = document.querySelector(`.notice-card[data-notice-id="${noticeId}"]`);
+                      if (card) {
+                          card.classList.remove('unread');
+                          card.classList.add('read');
+                          const badge = card.querySelector('.new-badge');
+                          if (badge) badge.remove();
+                      }
+                      
+                      // Update count
+                      updateUnreadCount();
+                  }
+              });
+        }
+
+        // Update unread count
+        function updateUnreadCount() {
+            const unreadCards = document.querySelectorAll('.notice-card.unread').length;
+            const countEl = document.querySelector('.notice-count');
+            if (countEl) {
+                countEl.textContent = `${document.querySelectorAll('.notice-card').length} notices`;
+            }
+            
+            const navBadge = document.querySelector('.nav-badge');
+            if (navBadge) {
+                if (unreadCards > 0) {
+                    navBadge.textContent = unreadCards;
+                } else {
+                    navBadge.remove();
+                }
+            }
+        }
+
+        // Filter notices
+        function filterNotices() {
+            const typeFilter = document.getElementById('typeFilter').value;
+            const readFilter = document.getElementById('readFilter').value;
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            
+            const cards = document.querySelectorAll('.notice-card');
+            let visibleCount = 0;
+            
+            cards.forEach(card => {
+                const type = card.dataset.type;
+                const readStatus = card.dataset.read;
+                const title = card.dataset.title;
+                const description = card.dataset.description;
+                
+                let show = true;
+                
+                // Type filter
+                if (typeFilter !== 'all' && type !== typeFilter) {
+                    show = false;
+                }
+                
+                // Read filter
+                if (readFilter !== 'all' && readStatus !== readFilter) {
+                    show = false;
+                }
+                
+                // Search filter
+                if (searchText && !title.includes(searchText) && !description.includes(searchText)) {
+                    show = false;
+                }
+                
+                card.style.display = show ? 'flex' : 'none';
+                if (show) visibleCount++;
+            });
+            
+            // Update count
+            const countEl = document.querySelector('.notice-count');
+            if (countEl) {
+                countEl.textContent = `${visibleCount} notices`;
+            }
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePdfModal();
+            }
+        });
+
+        // Close modal on outside click
+        document.getElementById('pdfModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePdfModal();
+            }
+        });
+    </script>
+</body>
+</html>

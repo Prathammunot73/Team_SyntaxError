@@ -1,0 +1,17 @@
+<h2>Evaluate Question {{ question_id }}</h2>
+
+<form method="POST">
+  {% for component in rubric %}
+      <label>
+        {{ component['component_name'] }} (Max: {{ component['max_marks'] }})
+      </label>
+      <input type="number"
+             name="{{ component['component_name'] }}"
+             min="0"
+             max="{{ component['max_marks'] }}"
+             required>
+      <br><br>
+  {% endfor %}
+
+  <button type="submit">Submit Evaluation</button>
+</form>

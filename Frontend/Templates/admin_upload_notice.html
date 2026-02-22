@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Notice/Timetable</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notices.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Admin Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('admin_upload_notice') }}" class="nav-item active">
+                    <span>📤</span> Upload Notice
+                </a>
+                <a href="{{ url_for('admin_manage_notices') }}" class="nav-item">
+                    <span>📋</span> Manage Notices
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Logged in as:<br><strong>{{ session.user_name }}</strong></p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1>📤 Upload Notice / Timetable</h1>
+                <p>Upload PDF files for students to view and download</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="content-section">
+                <form method="POST" enctype="multipart/form-data" class="notice-upload-form" id="uploadForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title">Title *</label>
+                            <input type="text" id="title" name="title" required 
+                                   placeholder="e.g., Semester 5 Timetable" maxlength="200">
+                            <span class="form-hint">Clear, descriptive title</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notice_type">Type *</label>
+                            <select id="notice_type" name="notice_type" required>
+                                <option value="timetable">📅 Timetable</option>
+                                <option value="general">📢 General Notice</option>
+                                <option value="exam">📝 Exam Notice</option>
+                                <option value="event">🎉 Event Notice</option>
+                                <option value="holiday">🏖️ Holiday Notice</option>
+                                <option value="urgent">🚨 Urgent Notice</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="3" 
+                                  placeholder="Brief description of the notice (optional)" maxlength="500"></textarea>
+                        <span class="form-hint">Optional: Add context or important details</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pdf_file">Upload PDF File *</label>
+                        <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                        <span class="form-hint">Maximum file size: 10MB | Format: PDF only</span>
+                        <div id="filePreview" class="file-preview" style="display: none;">
+                            <span class="file-icon">📄</span>
+                            <span class="file-name"></span>
+                            <span class="file-size"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Target Audience *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="target_role" value="all" checked onchange="toggleTargetFields()">
+                                <span>🌐 All Students</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="target_role" value="department" onchange="toggleTargetFields()">
+                                <span>🏢 Specific Department</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="target_role" value="semester" onchange="toggleTargetFields()">
+                                <span>📚 Specific Semester</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="target_role" value="class" onchange="toggleTargetFields()">
+                                <span>🎓 Specific Class (Dept + Sem)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row" id="targetFields" style="display: none;">
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <select id="department" name="department">
+                                <option value="">Select Department</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Civil">Civil</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Science">Science</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="semester">Semester</label>
+                            <select id="semester" name="semester">
+                                <option value="">Select Semester</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                                <option value="3">Semester 3</option>
+                                <option value="4">Semester 4</option>
+                                <option value="5">Semester 5</option>
+                                <option value="6">Semester 6</option>
+                                <option value="7">Semester 7</option>
+                                <option value="8">Semester 8</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="publish_at">Schedule Publish Time (Optional)</label>
+                        <input type="datetime-local" id="publish_at" name="publish_at">
+                        <span class="form-hint">Leave empty to publish immediately</span>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>📌 Important Notes:</h4>
+                        <ul>
+                            <li>Only PDF files are accepted (max 10MB)</li>
+                            <li>For timetables: Old timetables will be automatically archived</li>
+                            <li>Students will receive real-time notifications</li>
+                            <li>Targeted notices are only visible to selected students</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <span>📤</span> Upload & Publish
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // File preview
+        document.getElementById('pdf_file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('filePreview');
+            
+            if (file) {
+                const fileName = preview.querySelector('.file-name');
+                const fileSize = preview.querySelector('.file-size');
+                
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                preview.style.display = 'flex';
+                
+                // Validate file size
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size exceeds 10MB limit!');
+                    e.target.value = '';
+                    preview.style.display = 'none';
+                }
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        // Toggle target fields
+        function toggleTargetFields() {
+            const targetRole = document.querySelector('input[name="target_role"]:checked').value;
+            const targetFields = document.getElementById('targetFields');
+            const deptField = document.getElementById('department');
+            const semField = document.getElementById('semester');
+            
+            if (targetRole === 'all') {
+                targetFields.style.display = 'none';
+                deptField.required = false;
+                semField.required = false;
+            } else if (targetRole === 'department') {
+                targetFields.style.display = 'grid';
+                deptField.required = true;
+                semField.required = false;
+            } else if (targetRole === 'semester') {
+                targetFields.style.display = 'grid';
+                deptField.required = false;
+                semField.required = true;
+            } else if (targetRole === 'class') {
+                targetFields.style.display = 'grid';
+                deptField.required = true;
+                semField.required = true;
+            }
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Form validation
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('pdf_file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                e.preventDefault();
+                alert('Please select a PDF file to upload');
+                return;
+            }
+            
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                e.preventDefault();
+                alert('Only PDF files are allowed');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                e.preventDefault();
+                alert('File size exceeds 10MB limit');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Uploading...';
+        });
+    </script>
+</body>
+</html>

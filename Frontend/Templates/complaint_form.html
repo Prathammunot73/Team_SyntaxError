@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Complaint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Student Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('student_dashboard') }}" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('student_results') }}" class="nav-item">
+                    <span>📈</span> My Results
+                </a>
+                <a href="{{ url_for('new_complaint') }}" class="nav-item active">
+                    <span>➕</span> New Complaint
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1>Submit New Complaint</h1>
+                <p>Describe your grievance and our AI will analyze it</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="content-section">
+                <form method="POST" class="complaint-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <select id="subject" name="subject" required>
+                                <option value="">Select Subject</option>
+                                <option value="AI">AI (Artificial Intelligence)</option>
+                                <option value="DBMS">DBMS (Database Management Systems)</option>
+                                <option value="ADS">ADS (Advanced Data Structures)</option>
+                                <option value="PM">PM (Project Management)</option>
+                                <option value="EDA">EDA (Exploratory Data Analysis)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exam">Exam</label>
+                            <select id="exam" name="exam" required>
+                                <option value="">Select Exam</option>
+                                <option value="Insem-1">Insem-1 (20 marks)</option>
+                                <option value="Insem-2">Insem-2 (20 marks)</option>
+                                <option value="End Sem">End Sem (60 marks)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="complaint_text">Complaint Details</label>
+                        <textarea id="complaint_text" name="complaint_text" rows="8" required 
+                                  placeholder="Describe your complaint in detail. Please mention the question number (e.g., Q2) and explain the issue.
+
+Example: 
+I believe there is an error in the evaluation of Q2. I correctly solved the derivative problem and showed all steps, but only received 5 out of 10 marks. I deserve at least 8 marks as my answer matches the solution key."></textarea>
+                        <small class="form-hint">💡 Tip: Mention the question number (Q1, Q2, etc.) for better AI analysis</small>
+                    </div>
+
+                    <div class="info-box">
+                        <h4>📋 How it works:</h4>
+                        <ol>
+                            <li>Submit your complaint with question details</li>
+                            <li>AI analyzes your text and identifies the question</li>
+                            <li>System automatically highlights relevant section in your answer sheet</li>
+                            <li>Faculty reviews and provides decision</li>
+                        </ol>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

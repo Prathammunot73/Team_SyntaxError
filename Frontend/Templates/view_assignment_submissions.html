@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ assignment['title'] }} - Submissions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #007bff; }
+        .stat-label { color: #666; font-size: 0.9em; margin-top: 5px; }
+        .submissions-table { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #007bff; color: white; padding: 15px; text-align: left; font-weight: bold; }
+        td { padding: 15px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f8f9fa; }
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.85em; font-weight: bold; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .btn { padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; font-size: 0.9em; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 5% auto; padding: 30px; width: 90%; max-width: 500px; border-radius: 8px; }
+        .close { float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa; }
+        .close:hover { color: #000; }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .early-indicator { color: #28a745; font-weight: bold; }
+        .late-indicator { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h1>{{ assignment['title'] }}</h1>
+                    <p style="color: #666;">{{ assignment['subject'] }} • Created by {{ assignment['faculty_name'] }}</p>
+                    {% if assignment['description'] %}
+                    <p style="margin-top: 10px;">{{ assignment['description'] }}</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('faculty_assignments') }}" class="btn btn-secondary">Back</a>
+            </div>
+
+            <div style="margin-top: 15px; color: #666;">
+                <strong>Deadline:</strong> {{ assignment['deadline'][:16].replace('T', ' ') }} | 
+                <strong>Max Bonus:</strong> {{ assignment['max_bonus_marks'] }} marks | 
+                <strong>Reward Type:</strong> {{ assignment['reward_type'].title() }}
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats['total_submissions'] }}</div>
+                    <div class="stat-label">Total Submissions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats['verified_submissions'] }}</div>
+                    <div class="stat-label">Verified</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats['pending_submissions'] }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats['early_submissions'] }}</div>
+                    <div class="stat-label">On Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats['avg_bonus'] }}</div>
+                    <div class="stat-label">Avg Bonus</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats['total_bonus_awarded'] }}</div>
+                    <div class="stat-label">Total Awarded</div>
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="submissions-table">
+            {% if submissions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Submission Time</th>
+                        <th>AI Bonus</th>
+                        <th>Final Bonus</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td>
+                            <strong>{{ sub['student_name'] }}</strong><br>
+                            <small style="color: #666;">{{ sub['student_email'] }}</small>
+                        </td>
+                        <td>
+                            {{ sub['submission_time'][:16].replace('T', ' ') }}<br>
+                            {% if sub['submission_time'] <= assignment['deadline'] %}
+                                <span class="early-indicator">✓ On Time</span>
+                            {% else %}
+                                <span class="late-indicator">✗ Late</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ sub['ai_bonus_marks'] }}</strong> marks</td>
+                        <td>
+                            {% if sub['is_verified'] %}
+                                <strong>{{ sub['teacher_final_bonus'] or 0 }}</strong> marks
+                            {% else %}
+                                <span style="color: #999;">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub['is_verified'] %}
+                                <span class="badge badge-success">Verified</span>
+                                {% if sub['verified_by_name'] %}
+                                <br><small>by {{ sub['verified_by_name'] }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub['file_path'] %}
+                            <a href="{{ url_for('download_submission', submission_id=sub['id']) }}" class="btn" style="margin-bottom: 5px;">Download</a>
+                            {% endif %}
+                            {% if not sub['is_verified'] %}
+                            <button onclick="openVerifyModal('{{ sub['id'] }}', '{{ sub['student_name'] }}', {{ sub['ai_bonus_marks'] }})" class="btn btn-success">Verify</button>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled>Verified</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <p>No submissions yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Verify Modal -->
+    <div id="verifyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeVerifyModal()">&times;</span>
+            <h2>Verify Submission</h2>
+            <form id="verifyForm" method="POST">
+                <input type="hidden" id="submissionId" name="submission_id">
+                
+                <div class="form-group">
+                    <label>Student:</label>
+                    <div id="studentName" style="font-weight: bold;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>AI Calculated Bonus:</label>
+                    <div id="aiBonus" style="font-weight: bold; color: #007bff;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="manual_bonus">Override Bonus (optional):</label>
+                    <input type="number" id="manual_bonus" name="manual_bonus" step="0.5" min="0" placeholder="Leave empty to use AI bonus">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes (optional):</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="Add any comments..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" name="action" value="approve" class="btn btn-success">Approve</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
+                    <button type="button" onclick="closeVerifyModal()" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openVerifyModal(submissionId, studentName, aiBonus) {
+            document.getElementById('submissionId').value = submissionId;
+            document.getElementById('studentName').textContent = studentName;
+            document.getElementById('aiBonus').textContent = aiBonus + ' marks';
+            document.getElementById('verifyForm').action = '/faculty/submission/verify/' + submissionId;
+            document.getElementById('verifyModal').style.display = 'block';
+        }
+
+        function closeVerifyModal() {
+            document.getElementById('verifyModal').style.display = 'none';
+            document.getElementById('manual_bonus').value = '';
+            document.getElementById('notes').value = '';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('verifyModal');
+            if (event.target == modal) {
+                closeVerifyModal();
+            }
+        }
+    </script>
+</body>
+</html>
