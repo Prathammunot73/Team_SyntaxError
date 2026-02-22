@@ -59,23 +59,15 @@ See documentation files for detailed information:
 - **AI Dashboard Insights**: Real-time analytics and recommendations for faculty/admin
 - **Smart Performance Tracking**: Automated student performance analysis
 - **Predictive Analytics**: Forecast complaint volumes and system load
-- **Problem Detection**: Automatically identify recurring issues
-- **Trend Analysis**: Track patterns over 30-day periods
-- **PDF Highlighting**: Highlight relevant answer sheet sections
 - **Smart Bonus Calculation**: Three reward strategies (Fixed, Tier, Scaling)
-- **Email Automation**: Professional HTML emails sent automatically
 - **Real-Time Updates**: WebSocket-based instant notifications
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: HTML5, CSS3, JavaScript, FullCalendar.js, Socket.IO
+- **Frontend**: HTML5, CSS3, JavaScript, FullCalendar.js
 - **Backend**: Python Flask, Flask-SocketIO
 - **Database**: SQLite3 with optimized indexes
-- **AI Processing**: NLP-based text analysis
 - **Real-Time**: WebSocket communication
-- **Email**: SMTP with HTML templates
-- **PDF Processing**: PyPDF2, ReportLab
-
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
@@ -219,7 +211,7 @@ project/
 
 ### Event Calendar Workflow
 1. Admin creates event with date, time, and target audience
-2. System sends email notifications to targeted students
+2. System sends notifications to targeted students
 3. Real-time WebSocket updates for online students
 4. Students view events on landscape calendar
 5. Click events to see details with countdown timer
@@ -267,12 +259,6 @@ Three reward strategies:
 2. **Tier-Based**: Different bonus levels (Very Early, Early, On Time)
 3. **Scaling Bonus**: Linear decrease from max to zero
 
-### Automated Email System
-- Professional HTML email templates
-- Event notifications (created/updated/cancelled)
-- Assignment reminders
-- Notice announcements
-- Asynchronous sending (non-blocking)
 
 ### Real-Time Updates
 - WebSocket-based instant notifications
@@ -308,20 +294,17 @@ python test_assignment_system.py
 3. Test assignment submission and bonus calculation
 4. Test notice upload and viewing
 5. Test real-time notifications
-6. Test email delivery (if configured)
 
 ## 📊 Key Features Summary
 
 | Feature | Status | Description |
 |---------|--------|-------------|
 | Event Calendar | ✅ Complete | Landscape view with FullCalendar |
-| Email Notifications | ✅ Complete | HTML emails with SMTP |
 | Real-Time Updates | ✅ Complete | WebSocket via Flask-SocketIO |
 | Assignment System | ✅ Complete | Early submission rewards |
 | Notice Management | ✅ Complete | Multi-category with files |
 | Marks Management | ✅ Complete | Entry and result viewing |
 | Grievance System | ✅ Complete | AI-powered analysis |
-| PDF Highlighting | ✅ Complete | Automatic highlighting |
 
 ## 📖 Documentation
 
