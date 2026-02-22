@@ -149,7 +149,6 @@ project/
 │   └── uploads/                    # File storage
 │       ├── answer_sheets/          # Answer sheet PDFs
 │       ├── assignments/            # Assignment files
-│       ├── highlighted/            # Highlighted PDFs
 │       └── notices/                # Notice attachments
 │
 ├── utils/                          # Utility modules
@@ -157,7 +156,6 @@ project/
 │   ├── pdf_highlighter.py          # PDF highlighting
 │   ├── assignment_service.py       # Assignment management
 │   ├── event_service.py            # Event calendar service
-│   ├── email_service.py            # Email notifications
 │   ├── notice_service.py           # Notice management
 │   ├── notification_service.py     # Real-time notifications
 │   ├── websocket_handler.py        # WebSocket handling
